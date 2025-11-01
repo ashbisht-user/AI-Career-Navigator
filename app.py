@@ -1,6 +1,6 @@
 import streamlit as st
 import json
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
@@ -22,12 +22,11 @@ user_interests_input = st.text_input("💡 Enter your interests (comma-separated
 if st.button("🎯 Generate Career Matches"):
     user_skills = [s.strip().lower() for s in user_skills_input.split(",") if s.strip()]
     user_interests = [i.strip().lower() for i in user_interests_input.split(",") if i.strip()]
-
-    career_texts = [" ".join(c["required_skills"] + c["interest_tags"]) for c in careers]
-    career_vectors = model.encode(career_texts, normalize_embeddings=True)
-    user_vector = model.encode([" ".join(user_skills + user_interests)], normalize_embeddings=True)
-
-    similarities = cosine_similarity(user_vector, career_vectors)[0]
+     career_texts = [" ".join(c["required_skills"] + c["interest_tags"]) for c in careers]
+     vectorizer = TfidfVectorizer().fit(career_texts)
+     career_vectors = vectorizer.transform(career_texts)
+     user_vector = vectorizer.transform([" ".join(user_skills + user_interests)])
+     similarities = cosine_similarity(user_vector, career_vectors)[0]
     top_indices = np.argsort(similarities)[::-1][:3]
     recommendations = [careers[i] for i in top_indices]
     st.session_state["recommendations"] = recommendations
